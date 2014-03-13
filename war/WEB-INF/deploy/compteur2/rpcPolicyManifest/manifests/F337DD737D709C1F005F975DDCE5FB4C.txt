@@ -1,0 +1,2 @@
+serviceClass: fr.istic.gwt.compteur.client.GreetingService
+path: 1926CAB48D14DBA35312DE5B225A88AD.gwt.rpc
