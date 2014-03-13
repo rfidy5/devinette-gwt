@@ -27,35 +27,49 @@ public class Compteur implements EntryPoint {
 	private VerticalPanel mainPanel = new VerticalPanel();
 	private HorizontalPanel visuPanel = new HorizontalPanel();
 	private HorizontalPanel buttonPanel = new HorizontalPanel();
+	private HorizontalPanel msgInstructionPanel = new HorizontalPanel();
 	private TextBox visuDevinetteTextBox = new TextBox();
 	private Button startButton = new Button("Demarrer");
 	private Label label;
 
 	private int randomNumber;
-	private int compteur;
 	private int entercompteur;
 
-
+	private static int lowNumber;
+	private static int highNumber;
+	private static String defaultLabel;
+	private final Label labelinstruction=new Label("Entrez un chiffre puis appuyez sur \"Entree\"");
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {	
+		// initialisation des bornes
+		initialiseLowHighNumber(0, 100);
+		
 		mainPanel.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
-		label= new Label("Choisissez un nombre entre 1 et 100:");
+		label= new Label(defaultLabel);
 
+		
+		
 		startButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				refresh();
 				startButton.setEnabled(false);
 				visuPanel.add(visuDevinetteTextBox);
 				visuPanel.add(label);
+
+				msgInstructionPanel.add(labelinstruction);
 			}
 		});
+
 		buttonPanel.setSpacing(20);
 		buttonPanel.add(startButton);
+
 		mainPanel.add(visuPanel);
 		mainPanel.add(buttonPanel);
-
+		mainPanel.add(msgInstructionPanel);
+		
+		
 		RootPanel.get("mainCompteur").add(mainPanel);
 
 		//		 Listen for keyboard events in the input box.
@@ -63,28 +77,28 @@ public class Compteur implements EntryPoint {
 
 			@Override
 			public void onKeyDown(KeyDownEvent event) {
-				compteur++;
-				System.out.println("press" + compteur);
 				if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {	
 					entercompteur++;
-					System.out.println("enter" + entercompteur);    		  
+//					System.out.println("enter" + entercompteur);    		  
 
 					try {
 						int entryVal = Integer.parseInt(visuDevinetteTextBox.getText());
 
-						System.out.println("return "+verifyNumber(entryVal));
+//						System.out.println("return "+verifyNumber(entryVal));
 
 						if(verifyNumber(entryVal)==1){
 							label.setText("trop grand / "+ entercompteur +" coups effectues");
 						}if(verifyNumber(entryVal)==-1){
 							label.setText("trop petit / "+ entercompteur +" coups effectues");
 						}if(verifyNumber(entryVal)==0){
-							label.setText("Vous avez gagne en "+entercompteur+" coups");
+							label.setText(" Vous avez gagne en "+entercompteur+" coups");
 							new MessageInfoBox("Vous pouvez rejouer").afficher();
+						}if(verifyNumber(entryVal)==2){
+							label.setText(defaultLabel);
 						}
 					} catch (Exception e) {
-						System.out.println(e.getMessage());
-						label.setText("Format non valide! Veuillez entrer un nombre!");
+//						System.out.println(e.getMessage());
+						label.setText("Format non valide! Veuillez entrer un nombre entier!");
 					}
 
 				}
@@ -97,22 +111,30 @@ public class Compteur implements EntryPoint {
 	private void refresh() {
 		visuDevinetteTextBox.setEnabled(true);
 		visuDevinetteTextBox.setValue("");
-		createNumber(0,100);
+		createNumber();
 		System.out.println(randomNumber);
-		compteur=0;
 		entercompteur=0;
-		label.setText("Choisissez un nombre entre 1 et 100:");
+		label.setText(defaultLabel);
 
 	}
 	/**
 	 * creation du nombre aleatoire a deviner
-	 * @param lower borne inferieure
-	 * @param higher borne superieure
 	 * @return
 	 */
-	private int createNumber(int lower, int higher){
-		randomNumber = (int)(Math.random() * (higher-lower)) + lower;
+	private int createNumber(){
+		randomNumber = (int)(Math.random() * (highNumber-lowNumber)) + lowNumber;
 		return randomNumber;
+	}
+
+	/**
+	 * permet de definir l'intervalle de definition des nombres
+	 * @param lower borne inferieure
+	 * @param higher borne superieure
+	 */
+	private void initialiseLowHighNumber(int lower, int higher){
+		lowNumber=lower;
+		highNumber=higher;
+		defaultLabel="Choisissez un nombre entre" +lowNumber+" et "+highNumber;
 	}
 	/**
 	 * permet de verifier si le nombre a ete trouve ou pas
@@ -120,16 +142,21 @@ public class Compteur implements EntryPoint {
 	 * @return
 	 */
 	private int verifyNumber(int number){
-		if(number>randomNumber){
+
+		//le nombre entre est trop grand
+		if(number>randomNumber && number<=highNumber){
 			return 1;
-		}
-		if(number<randomNumber){
-			return -1;
-		}if(number==randomNumber){
+		}//le nombre entre est trop petit
+		if(number<randomNumber && number>=lowNumber){
+			return -1;			
+		}//le nombre a ete trouve
+		if(number==randomNumber){
 			return 0;
-		}else{ 
+		}//le nombre entre n'est pas dans l'intervalle
+		if(number>highNumber || number<lowNumber){ 
 			return 2;
 		}
+		return 3;
 	}
 
 	/**
@@ -138,7 +165,10 @@ public class Compteur implements EntryPoint {
 	 *
 	 */
 	private class MessageInfoBox extends DialogBox {
-
+		/**
+		 * constructeur de la dialogbox
+		 * @param message 
+		 */
 		private MessageInfoBox(String message) {
 
 			setText("Jeu de devinette");
